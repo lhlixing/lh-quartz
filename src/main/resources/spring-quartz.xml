@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:task="http://www.springframework.org/schema/task" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+	<!-- 线程池，可选 -->
+	<bean id="executor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<property name="corePoolSize" value="10" />
+		<property name="maxPoolSize" value="100" />
+		<property name="queueCapacity" value="500" />	<!-- 当队列满了以后，作业会进入假死状态，因此队列一定要设置得足够大 -->
+	</bean>
+
+	<!-- 实现SchedulerFactoryBean创建job后，可以注入其他bean -->
+	<bean id="jobFactory" class="com.lh.job.util.JobFactory"></bean>
+
+	<bean name="quartzScheduler"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<!-- 实现SchedulerFactoryBean创建job后，可以注入其他bean -->
+		<property name="jobFactory" ref="jobFactory" />
+		<property name="dataSource" ref="dataSource" />
+		<property name="applicationContextSchedulerContextKey" value="applicationContextKey" />
+		<!--可选，QuartzScheduler 启动时更新己存在的Job，这样就不用每次修改targetObject后删除qrtz_job_details表对应记录了 -->
+		<property name="overwriteExistingJobs" value="true" />
+		<!-- 集群配置 -->
+		<property name="configLocation" value="classpath:quartz.properties" />
+		<property name="triggers">
+			<list>
+				<ref bean="trigger1" />
+			</list>
+		</property>
+		<!-- 线程池，可选 -->
+		<!-- <property name="taskExecutor" ref="executor" /> -->
+	</bean>
+
+	<bean id="jobDetail1"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="jobClass">
+			<value>com.lh.job.MyJob</value>
+		</property>
+		<property name="durability" value="true" />
+		<!-- job是可恢复的，失败的job在重启后会再次运行 -->
+		<property name="requestsRecovery" value="true" />
+		<property name="jobDataMap">
+			<map>
+				<entry key="id" value="1" value-type="long" />
+			</map>
+		</property>
+	</bean>
+	<bean id="trigger1"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="jobDetail1" />
+		<property name="cronExpression" value="0/11 * * * * ?" />
+	</bean>
+
+</beans>

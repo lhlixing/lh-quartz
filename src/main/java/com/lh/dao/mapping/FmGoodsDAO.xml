@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.store.fm.dao.FmGoodsDAO" >
+  <resultMap id="BaseResultMap" type="com.store.fm.domain.FmGoodsDO" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="channel_type" property="channelType" jdbcType="INTEGER" />
+    <result column="cateId" property="cateid" jdbcType="BIGINT" />
+    <result column="sub_cate_id" property="subCateId" jdbcType="BIGINT" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="summary" property="summary" jdbcType="VARCHAR" />
+    <result column="is_valid" property="isValid" jdbcType="INTEGER" />
+    <result column="online_time" property="onlineTime" jdbcType="TIMESTAMP" />
+    <result column="offline_time" property="offlineTime" jdbcType="TIMESTAMP" />
+    <result column="add_user_id" property="addUserId" jdbcType="BIGINT" />
+    <result column="add_time" property="addTime" jdbcType="TIMESTAMP" />
+    <result column="audit_user_id" property="auditUserId" jdbcType="BIGINT" />
+    <result column="audit_time" property="auditTime" jdbcType="TIMESTAMP" />
+    <result column="add_remark" property="addRemark" jdbcType="VARCHAR" />
+    <result column="audit_remark" property="auditRemark" jdbcType="VARCHAR" />
+    <result column="invalid_remark" property="invalidRemark" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    id, channel_type, cateId, sub_cate_id, name, summary, is_valid, online_time, offline_time, 
+    add_user_id, add_time, audit_user_id, audit_time, add_remark, audit_remark, invalid_remark, 
+    status, create_time
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.store.fm.domain.FmGoodsQuery" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from fm_goods
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectGoodsList" resultType="com.store.fm.domain.FmGoodsListDO" parameterType="map" >
+    select g.id,g.`name`,g.cateId,g.sub_cate_id subCateId,g.channel_type channelType,g.summary,IFNULL(SUM(s.spu_total_count),0) spuTotalCount,IFNULL(SUM(s.spu_count),0) spuCount FROM fm_goods g left JOIN fm_spu_stock s ON g.id = s.goods_id
+    <where>
+    	<if test="goodsId != null" >
+       		and g.id = #{goodsId,jdbcType=BIGINT}
+     	</if>
+	   	<if test="cateId != null" >
+       		and g.cateId = #{cateId,jdbcType=BIGINT}
+     	</if>
+     	<if test="subCateId != null" >
+       		and g.sub_cate_id = #{subCateId,jdbcType=BIGINT}
+     	</if>
+     	<if test="isValid != null" >
+       		and g.is_valid = #{isValid,jdbcType=INTEGER}
+     	</if>
+     	<if test="channelType != null" >
+       		and g.channel_type = #{channelType,jdbcType=INTEGER}
+     	</if>
+     	<if test="name != null" >
+       		and instr(g.name, #{name})
+     	</if>
+    </where>
+     GROUP BY g.id
+     <if test="offer!=null">
+	    <if test="pageSize!=null">
+	         limit #{offer}, #{pageSize}
+	    </if>
+    </if>
+  </select>
+   <select id="countGoodsList" resultType="java.lang.Integer" parameterType="map" >
+    select count(*) FROM fm_goods g 
+    <where>
+    	<if test="goodsId != null" >
+       		and g.id = #{goodsId,jdbcType=BIGINT}
+     	</if>
+	   	<if test="cateId != null" >
+       		and g.cateId = #{cateId,jdbcType=BIGINT}
+     	</if>
+     	<if test="subCateId != null" >
+       		and g.sub_cate_id = #{subCateId,jdbcType=BIGINT}
+     	</if>
+     	<if test="isValid != null" >
+       		and g.is_valid = #{isValid,jdbcType=INTEGER}
+     	</if>
+     	<if test="channelType != null" >
+       		and g.channel_type = #{channelType,jdbcType=INTEGER}
+     	</if>
+     	<if test="name != null" >
+       		and instr(g.name, #{name})
+     	</if>
+    </where>
+  </select>
+  <select id="selectGoodsListById" resultType="com.store.fm.domain.FmGoodsListDO" parameterType="java.lang.Long" >
+    select g.id,g.`name`,g.is_valid isValid, g.cateId,g.online_time onlineTime,g.offline_time offlineTime,g.sub_cate_id subCateId,g.channel_type channelType,g.summary,IFNULL(SUM(s.spu_total_count),0) spuTotalCount,IFNULL(SUM(s.spu_count),0) spuCount FROM fm_goods g left JOIN fm_spu_stock s ON g.id = s.goods_id
+    where g.id = #{goodsId,jdbcType=BIGINT}
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select 
+    <include refid="Base_Column_List" />
+    from fm_goods
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from fm_goods
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.store.fm.domain.FmGoodsQuery" >
+    delete from fm_goods
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.store.fm.domain.FmGoodsDO" useGeneratedKeys="true" keyProperty="id">
+    insert into fm_goods (id, channel_type, cateId, 
+      sub_cate_id, name, summary, 
+      is_valid, online_time, offline_time, 
+      add_user_id, add_time, audit_user_id, 
+      audit_time, add_remark, audit_remark, 
+      invalid_remark, status, create_time
+      )
+    values (#{id,jdbcType=BIGINT}, #{channelType,jdbcType=INTEGER}, #{cateid,jdbcType=BIGINT}, 
+      #{subCateId,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{summary,jdbcType=VARCHAR}, 
+      #{isValid,jdbcType=INTEGER}, #{onlineTime,jdbcType=TIMESTAMP}, #{offlineTime,jdbcType=TIMESTAMP}, 
+      #{addUserId,jdbcType=BIGINT}, #{addTime,jdbcType=TIMESTAMP}, #{auditUserId,jdbcType=BIGINT}, 
+      #{auditTime,jdbcType=TIMESTAMP}, #{addRemark,jdbcType=VARCHAR}, #{auditRemark,jdbcType=VARCHAR}, 
+      #{invalidRemark,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.store.fm.domain.FmGoodsDO" useGeneratedKeys="true" keyProperty="id">
+    insert into fm_goods
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="channelType != null" >
+        channel_type,
+      </if>
+      <if test="cateid != null" >
+        cateId,
+      </if>
+      <if test="subCateId != null" >
+        sub_cate_id,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="summary != null" >
+        summary,
+      </if>
+      <if test="isValid != null" >
+        is_valid,
+      </if>
+      <if test="onlineTime != null" >
+        online_time,
+      </if>
+      <if test="offlineTime != null" >
+        offline_time,
+      </if>
+      <if test="addUserId != null" >
+        add_user_id,
+      </if>
+      <if test="addTime != null" >
+        add_time,
+      </if>
+      <if test="auditUserId != null" >
+        audit_user_id,
+      </if>
+      <if test="auditTime != null" >
+        audit_time,
+      </if>
+      <if test="addRemark != null" >
+        add_remark,
+      </if>
+      <if test="auditRemark != null" >
+        audit_remark,
+      </if>
+      <if test="invalidRemark != null" >
+        invalid_remark,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="channelType != null" >
+        #{channelType,jdbcType=INTEGER},
+      </if>
+      <if test="cateid != null" >
+        #{cateid,jdbcType=BIGINT},
+      </if>
+      <if test="subCateId != null" >
+        #{subCateId,jdbcType=BIGINT},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="summary != null" >
+        #{summary,jdbcType=VARCHAR},
+      </if>
+      <if test="isValid != null" >
+        #{isValid,jdbcType=INTEGER},
+      </if>
+      <if test="onlineTime != null" >
+        #{onlineTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="offlineTime != null" >
+        #{offlineTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="addUserId != null" >
+        #{addUserId,jdbcType=BIGINT},
+      </if>
+      <if test="addTime != null" >
+        #{addTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="auditUserId != null" >
+        #{auditUserId,jdbcType=BIGINT},
+      </if>
+      <if test="auditTime != null" >
+        #{auditTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="addRemark != null" >
+        #{addRemark,jdbcType=VARCHAR},
+      </if>
+      <if test="auditRemark != null" >
+        #{auditRemark,jdbcType=VARCHAR},
+      </if>
+      <if test="invalidRemark != null" >
+        #{invalidRemark,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.store.fm.domain.FmGoodsQuery" resultType="java.lang.Integer" >
+    select count(*) from fm_goods
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update fm_goods
+    <set >
+      <if test="record.id != null" >
+        id = #{record.id,jdbcType=BIGINT},
+      </if>
+      <if test="record.channelType != null" >
+        channel_type = #{record.channelType,jdbcType=INTEGER},
+      </if>
+      <if test="record.cateid != null" >
+        cateId = #{record.cateid,jdbcType=BIGINT},
+      </if>
+      <if test="record.subCateId != null" >
+        sub_cate_id = #{record.subCateId,jdbcType=BIGINT},
+      </if>
+      <if test="record.name != null" >
+        name = #{record.name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.summary != null" >
+        summary = #{record.summary,jdbcType=VARCHAR},
+      </if>
+      <if test="record.isValid != null" >
+        is_valid = #{record.isValid,jdbcType=INTEGER},
+      </if>
+      <if test="record.onlineTime != null" >
+        online_time = #{record.onlineTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.offlineTime != null" >
+        offline_time = #{record.offlineTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.addUserId != null" >
+        add_user_id = #{record.addUserId,jdbcType=BIGINT},
+      </if>
+      <if test="record.addTime != null" >
+        add_time = #{record.addTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.auditUserId != null" >
+        audit_user_id = #{record.auditUserId,jdbcType=BIGINT},
+      </if>
+      <if test="record.auditTime != null" >
+        audit_time = #{record.auditTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.addRemark != null" >
+        add_remark = #{record.addRemark,jdbcType=VARCHAR},
+      </if>
+      <if test="record.auditRemark != null" >
+        audit_remark = #{record.auditRemark,jdbcType=VARCHAR},
+      </if>
+      <if test="record.invalidRemark != null" >
+        invalid_remark = #{record.invalidRemark,jdbcType=VARCHAR},
+      </if>
+      <if test="record.status != null" >
+        status = #{record.status,jdbcType=INTEGER},
+      </if>
+      <if test="record.createTime != null" >
+        create_time = #{record.createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update fm_goods
+    set id = #{record.id,jdbcType=BIGINT},
+      channel_type = #{record.channelType,jdbcType=INTEGER},
+      cateId = #{record.cateid,jdbcType=BIGINT},
+      sub_cate_id = #{record.subCateId,jdbcType=BIGINT},
+      name = #{record.name,jdbcType=VARCHAR},
+      summary = #{record.summary,jdbcType=VARCHAR},
+      is_valid = #{record.isValid,jdbcType=INTEGER},
+      online_time = #{record.onlineTime,jdbcType=TIMESTAMP},
+      offline_time = #{record.offlineTime,jdbcType=TIMESTAMP},
+      add_user_id = #{record.addUserId,jdbcType=BIGINT},
+      add_time = #{record.addTime,jdbcType=TIMESTAMP},
+      audit_user_id = #{record.auditUserId,jdbcType=BIGINT},
+      audit_time = #{record.auditTime,jdbcType=TIMESTAMP},
+      add_remark = #{record.addRemark,jdbcType=VARCHAR},
+      audit_remark = #{record.auditRemark,jdbcType=VARCHAR},
+      invalid_remark = #{record.invalidRemark,jdbcType=VARCHAR},
+      status = #{record.status,jdbcType=INTEGER},
+      create_time = #{record.createTime,jdbcType=TIMESTAMP}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.store.fm.domain.FmGoodsDO" >
+    update fm_goods
+    <set >
+      <if test="channelType != null" >
+        channel_type = #{channelType,jdbcType=INTEGER},
+      </if>
+      <if test="cateid != null" >
+        cateId = #{cateid,jdbcType=BIGINT},
+      </if>
+      <if test="subCateId != null" >
+        sub_cate_id = #{subCateId,jdbcType=BIGINT},
+      </if>
+      <if test="name != null" >
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="summary != null" >
+        summary = #{summary,jdbcType=VARCHAR},
+      </if>
+      <if test="isValid != null" >
+        is_valid = #{isValid,jdbcType=INTEGER},
+      </if>
+      <if test="onlineTime != null" >
+        online_time = #{onlineTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="offlineTime != null" >
+        offline_time = #{offlineTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="addUserId != null" >
+        add_user_id = #{addUserId,jdbcType=BIGINT},
+      </if>
+      <if test="addTime != null" >
+        add_time = #{addTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="auditUserId != null" >
+        audit_user_id = #{auditUserId,jdbcType=BIGINT},
+      </if>
+      <if test="auditTime != null" >
+        audit_time = #{auditTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="addRemark != null" >
+        add_remark = #{addRemark,jdbcType=VARCHAR},
+      </if>
+      <if test="auditRemark != null" >
+        audit_remark = #{auditRemark,jdbcType=VARCHAR},
+      </if>
+      <if test="invalidRemark != null" >
+        invalid_remark = #{invalidRemark,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.store.fm.domain.FmGoodsDO" >
+    update fm_goods
+    set channel_type = #{channelType,jdbcType=INTEGER},
+      cateId = #{cateid,jdbcType=BIGINT},
+      sub_cate_id = #{subCateId,jdbcType=BIGINT},
+      name = #{name,jdbcType=VARCHAR},
+      summary = #{summary,jdbcType=VARCHAR},
+      is_valid = #{isValid,jdbcType=INTEGER},
+      online_time = #{onlineTime,jdbcType=TIMESTAMP},
+      offline_time = #{offlineTime,jdbcType=TIMESTAMP},
+      add_user_id = #{addUserId,jdbcType=BIGINT},
+      add_time = #{addTime,jdbcType=TIMESTAMP},
+      audit_user_id = #{auditUserId,jdbcType=BIGINT},
+      audit_time = #{auditTime,jdbcType=TIMESTAMP},
+      add_remark = #{addRemark,jdbcType=VARCHAR},
+      audit_remark = #{auditRemark,jdbcType=VARCHAR},
+      invalid_remark = #{invalidRemark,jdbcType=VARCHAR},
+      status = #{status,jdbcType=INTEGER},
+      create_time = #{createTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="getFmGoodsDOByKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+  	select
+    <include refid="Base_Column_List" />
+    from fm_goods where id = #{key} or name = #{key} limit 1
+  </select>
+</mapper>
