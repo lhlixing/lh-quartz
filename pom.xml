@@ -256,7 +256,7 @@
 					<webappDirectory>src/main/webapp</webappDirectory>
 					<workDirectory>${project.build.directory}/work</workDirectory>
 					<useCache>false</useCache>
-					<!-- 打包排除env目录 -->
+					<!-- 打包排除env目录下所有文件 -->
 					<packagingExcludes>
 						WEB-INF/classes/env/**
 					</packagingExcludes>
