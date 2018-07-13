@@ -13,16 +13,37 @@
 	</properties>
 
 	<dependencies>
-		<!-- <dependency>
-			<groupId>com.fbank</groupId>
-			<artifactId>monitor</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency> -->
+		<!-- <dependency> <groupId>com.fbank</groupId> <artifactId>monitor</artifactId> <version>0.0.1-SNAPSHOT</version> </dependency> -->
 
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
 			<version>3.12</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20160810</version>
+		</dependency>
+
+		<!-- xml -->
+		<dependency>
+			<groupId>org.apache.directory.studio</groupId>
+			<artifactId>org.dom4j.dom4j</artifactId>
+			<version>1.6.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.thoughtworks.xstream</groupId>
+			<artifactId>xstream</artifactId>
+			<version>1.4.8</version>
 		</dependency>
 
 		<!-- servlet标准 -->
@@ -227,7 +248,7 @@
 				</includes>
 				<filtering>false</filtering>
 			</resource>
-			
+
 			<!-- 拷贝myBatis的xml配置文件 -->
 			<resource>
 				<directory>src/main/java</directory>
@@ -236,7 +257,7 @@
 				</includes>
 				<filtering>false</filtering>
 			</resource>
-			
+
 			<!-- 拷贝profile目录下的资源属性文件 -->
 			<resource>
 				<directory>src/main/resources/env/${package.environment}</directory>
