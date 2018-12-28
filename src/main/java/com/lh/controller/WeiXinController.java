@@ -2,9 +2,8 @@ package com.lh.controller;
 
 import java.io.IOException;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,13 +20,12 @@ import com.lh.weixin.MessageUtil;
 @RequestMapping(value = "weixin")
 public class WeiXinController {
 
-	// 与接口配置信息中的 Token 要一致
+	// 开发者在微信公众平台配置的token，只有微信端和商户端知道此token，请求参数中不会携带，用于验证签名
 	private static String token = "dapengniaowechat";
 
-	private static final char[] HEX_DIGITS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-
 	/**
-	 * 服务器验证
+	 * 服务器验证:微信调用此接口，商户进行验证请求确实是来自的微信的，验证成功直接返回原请求中的echostr参数值
+	 * 
 	 * @param request
 	 * @param response
 	 * @throws IOException
@@ -35,22 +33,23 @@ public class WeiXinController {
 	@RequestMapping(value = "security", method = RequestMethod.GET)
 	@ResponseBody
 	public void getWeiXinMethod(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		boolean validate = validate(request);
+		String signature = request.getParameter("signature");// 微信端签名结果串
+		String timestamp = request.getParameter("timestamp");// 时间戳
+		String nonce = request.getParameter("nonce");// 随机数
+		boolean validate = checkSignature(signature, timestamp, nonce);
 		if (validate) {
 			response.getWriter().write(request.getParameter("echostr"));// 参数中的随机字符串
 			response.getWriter().close();
 		}
-
 	}
 
 	/**
-	 * 消息的接收和处理
+	 * 消息的接收和处理：post 方法用于接收微信服务端消息和事件
 	 * 
 	 * @param request
 	 * @param response
 	 */
 	@RequestMapping(value = "security", method = RequestMethod.POST)
-	// post 方法用于接收微信服务端消息
 	public void DoPost(HttpServletRequest request, HttpServletResponse response) {
 		System.out.println("这是 post 方法！");
 		try {
@@ -61,42 +60,30 @@ public class WeiXinController {
 		}
 	}
 
-	private boolean validate(HttpServletRequest req) throws IOException {
-		String signature = req.getParameter("signature");// 微信加密签名
-		String timestamp = req.getParameter("timestamp");// 时间戳
-		String nonce = req.getParameter("nonce");// 随机数
-		List<String> list = new ArrayList<String>();
-		list.add(token);// token
-		list.add(timestamp);
-		list.add(nonce);
-		Collections.sort(list);// 字典排序
-		String s = "";
-		for (int i = 0; i < list.size(); i++) {
-			s += (String) list.get(i);
+	private static boolean checkSignature(String signature, String timestamp, String nonce) {
+		String[] strs = new String[] { token, timestamp, nonce };
+		// 将token、timestamp、nonce三个参数进行字典序排序
+		Arrays.sort(strs);
+		StringBuffer content = new StringBuffer();
+		for (int i = 0; i < strs.length; i++) {
+			content.append(strs[i]);
 		}
-		if (encode("SHA1", s).equalsIgnoreCase(signature)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	public static String encode(String algorithm, String str) {
-		if (str == null) {
-			return null;
-		}
+		MessageDigest md = null;
+		String tmpStr = null;
 		try {
-			// Java自带的加密类
-			MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
-			// 转为byte
-			messageDigest.update(str.getBytes());
-			return getFormattedText(messageDigest.digest());
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+			md = MessageDigest.getInstance("SHA-1");
+			// 将三个参数字符串拼接成一个字符串进行sha1加密
+			byte[] digest = md.digest(content.toString().getBytes());
+			tmpStr = byteToStr(digest);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
 		}
+		// 与参数中额签名signature对比，标识该请求来源于微信
+		return signature != null ? signature.toUpperCase().equals(tmpStr.toUpperCase()) : false;
 	}
 
-	private static String getFormattedText(byte[] bytes) {
+	private static String byteToStr(byte[] bytes) {
+		char[] HEX_DIGITS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 		int len = bytes.length;
 		StringBuilder buf = new StringBuilder(len * 2);
 		// 把密文转换成十六进制的字符串形式
